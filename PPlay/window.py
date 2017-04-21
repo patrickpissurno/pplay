@@ -3,6 +3,7 @@
 # Pygame and system modules
 import sys
 import pygame
+import ctypes
 from pygame.locals import *
 from . import keyboard
 from . import mouse
@@ -25,6 +26,14 @@ class Window():
         # Size
         self.width = width
         self.height = height
+
+        # Fullscreen
+        self.fullscreen_enabled = False
+        self.windowed_width = width
+        self.windowed_height = height
+
+        # Display info
+        self.display_width, self.display_height = self.__get_display_info__()
 
         # Pattern color
         self.color = [0,0,0]  # Black
@@ -51,22 +60,55 @@ class Window():
         # Can be used to update portions of the screen (Rect list)
         pygame.display.update()
 
-#------------------------TODO - VIDEO RESIZE METHODS----------------------
-    """Not implemented yet - Sets the Window to Fullscreen"""
-    # Unfortunately, it must save the old screen (buffer) and
-    # blit (transfer, see pygame doc) to the new FSCREEN
-    def set_fullscreen(self): pass
-    # TODO
+#------------------------VIDEO RESIZE METHODS----------------------
+    """Sets the Window to Fullscreen"""
+    def set_fullscreen(self):
+        if not self.fullscreen_enabled:
+            #backup windowed resolution
+            self.windowed_width = self.width
+            self.windowed_height = self.height
 
-    """Not implemented yet - Disable the full display mode"""
-    # Yeah.. guess what..
-    def restoreScreen(self): pass
-    # TODO
+            self.width = self.display_width
+            self.height = self.display_height
 
-    """Not implemented yet - Sets the Window resolution"""
-    # The same problem as fullscreen
-    def set_resolution(self, width, height): pass
-    # TODO
+            #go into fullscreen mode
+            copy = self.screen.copy()
+            self.screen = pygame.display.set_mode([self.width, self.height], pygame.FULLSCREEN)
+            self.screen.blit(copy, (0, 0))
+            pygame.display.update()
+            self.fullscreen_enabled = True
+        return
+
+    """Disable the full display mode"""
+    def restoreScreen(self):
+        if self.fullscreen_enabled:
+            #restore windowed resolution
+            self.width = self.windowed_width
+            self.height = self.windowed_height
+
+            #go into windowed mode
+            copy = self.screen.copy()
+            self.screen = pygame.display.set_mode([self.width, self.height])
+            self.screen.blit(copy, (0, 0))
+            pygame.display.update()
+            self.fullscreen_enabled = False
+        return
+
+    """Sets the Window resolution"""
+    def set_resolution(self, width, height):
+        self.width = width
+        self.height = height
+
+        copy = self.screen.copy()
+        self.screen = pygame.display.set_mode([self.width, self.height])
+        self.screen.blit(copy, (0, 0))
+        pygame.display.update()
+        return
+
+    """Helper method to get the operating system's resolution"""
+    def __get_display_info__(self):
+        user32 = ctypes.windll.user32
+        return (user32.GetSystemMetrics(0), user32.GetSystemMetrics(1))
     
 #-----------------------CONTROL METHODS---------------------------
     """Refreshes the Window - makes changes visible, AND updates the Time"""
