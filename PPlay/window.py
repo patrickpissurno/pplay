@@ -80,7 +80,7 @@ class Window():
         return
 
     """Disable the full display mode"""
-    def restoreScreen(self):
+    def restore_screen(self):
         if self.fullscreen_enabled:
             #restore windowed resolution
             self.width = self.windowed_width
